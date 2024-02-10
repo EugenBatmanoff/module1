@@ -1,4 +1,5 @@
 package com.jmp.application;
+
 import com.jmp.bank.api.Bank;
 import com.jmp.cloud.bank.impl.BankImpl;
 import com.jmp.cloud.service.impl.BankServiceImpl;
@@ -10,17 +11,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 public class App {
 
     public static void main(String[] args) {
-        Bank bank = new BankImpl();
-        BankServiceImpl service = new BankServiceImpl();
+        var bank = new BankImpl();
+        var service = new BankServiceImpl();
 
-        List<User> users = service.generateUsers(10);
+        var users = service.generateUsers(10);
         printUserList(users);
 
-        List <BankCard> bankCards = generateBankCards(users, bank);
+        var bankCards = generateBankCards(users, bank);
 
         subscribeBankCards(bankCards, service);
 
@@ -46,51 +48,41 @@ public class App {
         Predicate<Subscription> condition =
                 subscription -> subscription.getStartDate().isAfter(LocalDate.now().minusDays(30));
 
-        List<Subscription> filteredSubscriptions = service.getAllSubscriptionsByCondition(condition);
-        for (Subscription filteredSubscription : filteredSubscriptions) {
-            System.out.println("filtered Subscription" + filteredSubscription);
-        }
+        var filteredSubscriptions = service.getAllSubscriptionsByCondition(condition);
+        filteredSubscriptions.stream()
+                .map(filteredSubscription -> "filtered Subscription" + filteredSubscription).forEach(System.out::println);
     }
 
     private static void returnSubscriptionByCardNumber(List<BankCard> bankCards, BankServiceImpl service) {
         System.out.println(System.lineSeparator() + "return subscriptions by the card number: ");
-        for (var bankCard : bankCards) {
-            System.out.println(service.getSubscriptionByBankCardNumber(bankCard.getNumber()));
-        }
+        bankCards.stream().map(bankCard -> service.getSubscriptionByBankCardNumber(bankCard.getNumber())).forEach(System.out::println);
     }
 
     private static void printSubscriptions(BankServiceImpl service) {
-        List<Subscription> list = service.getSubscriptions();
+        var list = service.getSubscriptions();
         System.out.println(System.lineSeparator() + "Printing all subscriptions: ");
-        for (Subscription subscription : list) {
-            System.out.println(subscription);
-        }
+        list.forEach(System.out::println);
     }
 
     private static void subscribeBankCards(List<BankCard> bankCards, BankServiceImpl service) {
-        for (var bankCard : bankCards) {
-            service.subscribe(bankCard);
-        }
+        bankCards.forEach(service::subscribe);
     }
 
     private static List<BankCard> generateBankCards(List<User> users, Bank bank) {
-        List<BankCard> bankCards = new ArrayList<>();
-        Random random = new Random();
+        var bankCards = new ArrayList<BankCard>();
+        var random = new Random();
         System.out.println(System.lineSeparator() + "generated bank cards: ");
-        for (var i = 0; i < 15; i++) {
-            User user = users.get(random.nextInt(users.size()));
-            var type = random.nextBoolean() ? BankCardType.CREDIT : BankCardType.DEBIT;
-            var bankCard = bank.createBankCard(user, type);
-            System.out.println(bankCard);
-            bankCards.add(bankCard);
-        }
+        IntStream.range(0, 15).mapToObj(i -> random.nextBoolean() ? BankCardType.CREDIT : BankCardType.DEBIT)
+                .map(type -> bank.createBankCard(users.get(random.nextInt(users.size())), type)).forEach(bankCard -> {
+                    System.out.println(bankCard);
+                    bankCards.add(bankCard);
+                });
         return bankCards;
     }
+
     private static void printUserList(List<User> users) {
         System.out.println("generated users: ");
-        for (var user : users) {
-            System.out.println(user.toString());
-        }
+        users.stream().map(User::toString).forEach(System.out::println);
     }
 
 

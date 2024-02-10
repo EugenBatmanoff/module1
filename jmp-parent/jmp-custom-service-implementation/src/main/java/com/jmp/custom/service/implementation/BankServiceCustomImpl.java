@@ -18,8 +18,8 @@ public class BankServiceCustomImpl implements BankService {
     }
 
     @Override
-    public Optional<Subscription> getSubscriptionByBankCardNumber(String number) {
-        return Optional.empty();
+    public Subscription getSubscriptionByBankCardNumber(String number) {
+        return null;
     }
 
     @Override
